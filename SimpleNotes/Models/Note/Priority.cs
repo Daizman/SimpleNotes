@@ -1,6 +1,6 @@
 ﻿namespace SimpleNotes.Models.Note;
 
-public enum Priority : byte
+public enum Priority
 {
     Low = 0,
     Middle,

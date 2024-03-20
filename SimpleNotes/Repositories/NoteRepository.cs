@@ -29,9 +29,9 @@ public class NoteRepository(ILogger<NoteRepository> logger) : INoteRepository
         _inMemoryRepo.Add(note);
     }
 
-    public bool Edit(Guid userId, Guid id, Note newNote)
+    public bool Edit(Note newNote)
     {
-        var note = _inMemoryRepo.FirstOrDefault(note => note.UserId == userId && note.Id == id);
+        var note = _inMemoryRepo.FirstOrDefault(note => note.UserId == newNote.UserId && note.Id == newNote.Id);
         if (note is null)
         {
             logger.LogWarning("Attempt to edit not existing note");
@@ -40,7 +40,7 @@ public class NoteRepository(ILogger<NoteRepository> logger) : INoteRepository
 
         note.Title = newNote.Title;
         note.Description = newNote.Description;
-        note.UpdateDateTime = DateTime.Now;
+        note.UpdateDateTime = newNote.UpdateDateTime;
         note.IsCompleted = newNote.IsCompleted;
         note.Priority = newNote.Priority;
 

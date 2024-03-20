@@ -1,5 +1,5 @@
-﻿using System.Reflection;
-using SimpleNotes.Abstract;
+﻿using SimpleNotes.Abstract;
+using SimpleNotes.Configuration.Mappings;
 using SimpleNotes.Repositories;
 using SimpleNotes.Services.Common;
 
@@ -9,9 +9,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddSimpleNotes(this IServiceCollection services)
     {
-        services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        var dateTimeProvider = new DateTimeProvider();
+        services.AddSingleton<IDateTimeProvider>(dateTimeProvider);
+        
         services.AddSingleton<INoteRepository, NoteRepository>();
-        services.AddAutoMapper(Assembly.GetExecutingAssembly());
+        
+        services.AddAutoMapper(cfg =>
+        {
+            cfg.AddProfile(new NoteMappingProfile(dateTimeProvider));
+        });
 
         return services;
     }
