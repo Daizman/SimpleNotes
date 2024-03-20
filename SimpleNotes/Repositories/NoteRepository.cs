@@ -1,15 +1,14 @@
-﻿using SimpleNotes.Abstract;
+﻿using Microsoft.EntityFrameworkCore;
+using SimpleNotes.Abstract;
 using SimpleNotes.Models.Note;
 
 namespace SimpleNotes.Repositories;
 
-public class NoteRepository(ILogger<NoteRepository> logger) : INoteRepository
+public class NoteRepository(ILogger<NoteRepository> logger, ISimpleNotesDbContext simpleNotesDbContext) : INoteRepository
 {
-    private readonly List<Note> _inMemoryRepo = new();
-    
-    public Note? Get(Guid userId, Guid id)
+    public async Task<Note?> GetAsync(Guid userId, Guid id)
     {
-        var note = _inMemoryRepo.FirstOrDefault(note => note.UserId == userId && note.Id == id);
+        var note = await simpleNotesDbContext.Notes.FirstOrDefaultAsync(note => note.UserId == userId && note.Id == id);
         if (note is null)
         {
             logger.LogWarning("Attempt to get not existing note");
@@ -19,19 +18,21 @@ public class NoteRepository(ILogger<NoteRepository> logger) : INoteRepository
         return note;
     }
 
-    public IReadOnlyList<Note> GetAllForUser(Guid userId)
+    public async Task<IReadOnlyList<Note>> GetAllForUserAsync(Guid userId)
     {
-        return _inMemoryRepo.Where(note => note.UserId == userId).ToList().AsReadOnly();
+        return (await simpleNotesDbContext.Notes.Where(note => note.UserId == userId).ToListAsync()).AsReadOnly();
     }
 
-    public void Add(Note note)
+    public async Task AddAsync(Note note)
     {
-        _inMemoryRepo.Add(note);
+        simpleNotesDbContext.Notes.Add(note);
+        await simpleNotesDbContext.SaveChangesAsync();
     }
 
-    public bool Edit(Note newNote)
+    public async Task<bool> EditAsync(Note newNote)
     {
-        var note = _inMemoryRepo.FirstOrDefault(note => note.UserId == newNote.UserId && note.Id == newNote.Id);
+        var note = await simpleNotesDbContext.Notes.FirstOrDefaultAsync(note =>
+            note.UserId == newNote.UserId && note.Id == newNote.Id);
         if (note is null)
         {
             logger.LogWarning("Attempt to edit not existing note");
@@ -43,19 +44,24 @@ public class NoteRepository(ILogger<NoteRepository> logger) : INoteRepository
         note.UpdateDateTime = newNote.UpdateDateTime;
         note.IsCompleted = newNote.IsCompleted;
         note.Priority = newNote.Priority;
+        
+        await simpleNotesDbContext.SaveChangesAsync();
 
         return true;
     }
 
-    public bool Remove(Guid userId, Guid id)
+    public async Task<bool> RemoveAsync(Guid userId, Guid id)
     {
-        var note = _inMemoryRepo.FirstOrDefault(note => note.UserId == userId && note.Id == id);
+        var note = await simpleNotesDbContext.Notes.FirstOrDefaultAsync(note => note.UserId == userId && note.Id == id);
         if (note is null)
         {
             logger.LogWarning("Attempt to edit not existing note");
             return false;
         }
 
-        return _inMemoryRepo.Remove(note);
+        simpleNotesDbContext.Notes.Remove(note);
+        await simpleNotesDbContext.SaveChangesAsync();
+
+        return true;
     }
 }

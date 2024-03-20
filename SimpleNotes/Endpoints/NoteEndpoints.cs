@@ -11,22 +11,22 @@ public static class NoteEndpoints
     {
         var noteApi = app.MapGroup("/note").WithOpenApi();
 
-        noteApi.MapGet("/{userId}", (
+        noteApi.MapGet("/{userId}", async (
             Guid userId,
             INoteRepository noteRepo,
             IMapper mapper) =>
         {
-            return Results.Ok(mapper.Map<List<ListNoteVm>>(noteRepo.GetAllForUser(userId)));
+            return Results.Ok(mapper.Map<List<ListNoteVm>>(await noteRepo.GetAllForUserAsync(userId)));
         })
             .Produces<List<ListNoteVm>>();
 
-        noteApi.MapGet("/{userId}/{noteId}", (
+        noteApi.MapGet("/{userId}/{noteId}", async (
             Guid userId,
             Guid noteId, 
             INoteRepository noteRepo,
             IMapper mapper) =>
         {
-            var note = noteRepo.Get(userId, noteId);
+            var note = await noteRepo.GetAsync(userId, noteId);
             if (note is null)
                 return Results.NotFound();
             return Results.Ok(mapper.Map<DetailedNoteVm>(note));
@@ -34,25 +34,25 @@ public static class NoteEndpoints
             .Produces<DetailedNoteVm>()
             .Produces(StatusCodes.Status404NotFound);
 
-        noteApi.MapPost("/{userId}", (
+        noteApi.MapPost("/{userId}", async (
             Guid userId, 
             CreateNoteDto createNote, 
             INoteRepository noteRepo,
             IMapper mapper) =>
         {
-            noteRepo.Add(mapper.Map<Note>((userId, createNote)));
+            await noteRepo.AddAsync(mapper.Map<Note>((userId, createNote)));
             return Results.Created();
         })
             .Produces(StatusCodes.Status201Created);
 
-        noteApi.MapPut("/{userId}/{noteId}", (
+        noteApi.MapPut("/{userId}/{noteId}", async (
                 Guid userId,
                 Guid noteId,
                 EditNoteDto editNote,
                 INoteRepository noteRepo,
                 IMapper mapper) =>
             {
-                var result = noteRepo.Edit(mapper.Map<Note>((userId, noteId, editNote)));
+                var result = await noteRepo.EditAsync(mapper.Map<Note>((userId, noteId, editNote)));
                 return result
                     ? Results.Ok()
                     : Results.NotFound();
@@ -60,12 +60,12 @@ public static class NoteEndpoints
                 .Produces(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound);
 
-        noteApi.MapDelete("/{userId}/{noteId}", (
+        noteApi.MapDelete("/{userId}/{noteId}", async (
             Guid userId,
             Guid noteId,
             INoteRepository noteRepo) =>
         {
-            return noteRepo.Remove(userId, noteId)
+            return await noteRepo.RemoveAsync(userId, noteId)
                 ? Results.Ok()
                 : Results.NotFound();
         })

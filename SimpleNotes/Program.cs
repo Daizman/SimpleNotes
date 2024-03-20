@@ -1,11 +1,12 @@
 using SimpleNotes.Configuration;
+using SimpleNotes.Database;
 using SimpleNotes.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSimpleNotes();
+builder.Services.AddSimpleNotes(builder.Configuration);
 
 var app = builder.Build();
 
@@ -17,5 +18,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseNoteEndpoints();
+
+await DbInitializer.InitializeAsync(app);
 
 app.Run();
