@@ -12,12 +12,13 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    // toDo: добавить авторизацию в сваггере
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
-app.UseNoteEndpoints();
+app.UseSimpleNotesEndpoints();
 
 await DbInitializer.InitializeAsync(app);
 

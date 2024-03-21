@@ -6,6 +6,7 @@ using SimpleNotes.Models.Note;
 
 namespace SimpleNotes.Repositories;
 
+// toDo: добавить проверки на существование юзера
 public class NoteRepository(
     ILogger<NoteRepository> logger, 
     ISimpleNotesDbContext simpleNotesDbContext,

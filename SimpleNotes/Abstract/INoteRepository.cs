@@ -1,5 +1,4 @@
 ﻿using SimpleNotes.Dtos;
-using SimpleNotes.Models.Note;
 
 namespace SimpleNotes.Abstract;
 
