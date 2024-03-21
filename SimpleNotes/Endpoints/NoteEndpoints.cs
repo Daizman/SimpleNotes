@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using SimpleNotes.Abstract;
 using SimpleNotes.Dtos;
-using SimpleNotes.Models.Note;
 
 namespace SimpleNotes.Endpoints;
 
@@ -23,13 +22,12 @@ public static class NoteEndpoints
         noteApi.MapGet("/{userId}/{noteId}", async (
             Guid userId,
             Guid noteId, 
-            INoteRepository noteRepo,
-            IMapper mapper) =>
+            INoteRepository noteRepo) =>
         {
             var note = await noteRepo.GetAsync(userId, noteId);
             if (note is null)
                 return Results.NotFound();
-            return Results.Ok(mapper.Map<DetailedNoteVm>(note));
+            return Results.Ok(note);
         })
             .Produces<DetailedNoteVm>()
             .Produces(StatusCodes.Status404NotFound);
@@ -37,10 +35,9 @@ public static class NoteEndpoints
         noteApi.MapPost("/{userId}", async (
             Guid userId, 
             CreateNoteDto createNote, 
-            INoteRepository noteRepo,
-            IMapper mapper) =>
+            INoteRepository noteRepo) =>
         {
-            await noteRepo.AddAsync(mapper.Map<Note>((userId, createNote)));
+            await noteRepo.AddAsync(userId, createNote);
             return Results.Created();
         })
             .Produces(StatusCodes.Status201Created);
@@ -49,10 +46,9 @@ public static class NoteEndpoints
                 Guid userId,
                 Guid noteId,
                 EditNoteDto editNote,
-                INoteRepository noteRepo,
-                IMapper mapper) =>
+                INoteRepository noteRepo) =>
             {
-                var result = await noteRepo.EditAsync(mapper.Map<Note>((userId, noteId, editNote)));
+                var result = await noteRepo.EditAsync(userId, noteId, editNote);
                 return result
                     ? Results.Ok()
                     : Results.NotFound();

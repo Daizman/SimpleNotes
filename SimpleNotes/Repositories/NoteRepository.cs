@@ -1,44 +1,60 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using SimpleNotes.Abstract;
+using SimpleNotes.Dtos;
 using SimpleNotes.Models.Note;
 
 namespace SimpleNotes.Repositories;
 
-public class NoteRepository(ILogger<NoteRepository> logger, ISimpleNotesDbContext simpleNotesDbContext) : INoteRepository
+public class NoteRepository(
+    ILogger<NoteRepository> logger, 
+    ISimpleNotesDbContext simpleNotesDbContext,
+    IMapper mapper) : INoteRepository
 {
-    public async Task<Note?> GetAsync(Guid userId, Guid id)
+    public async Task<DetailedNoteVm?> GetAsync(Guid userId, Guid noteId)
     {
-        var note = await simpleNotesDbContext.Notes.FirstOrDefaultAsync(note => note.UserId == userId && note.Id == id);
+        var note = await simpleNotesDbContext
+            .Notes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(note => note.UserId == userId && note.Id == noteId);
         if (note is null)
         {
             logger.LogWarning("Attempt to get not existing note");
             return null;
         }
 
-        return note;
+        return mapper.Map<DetailedNoteVm>(note);
     }
 
-    public async Task<IReadOnlyList<Note>> GetAllForUserAsync(Guid userId)
+    public async Task<IReadOnlyList<ListNoteVm>> GetAllForUserAsync(Guid userId)
     {
-        return (await simpleNotesDbContext.Notes.Where(note => note.UserId == userId).ToListAsync()).AsReadOnly();
+        var userNotes = await simpleNotesDbContext
+            .Notes
+            .AsNoTracking()
+            .Where(note => note.UserId == userId)
+            .ToListAsync();
+        var mapped = mapper.Map<List<ListNoteVm>>(userNotes);
+        return mapped.AsReadOnly();
     }
 
-    public async Task AddAsync(Note note)
+    public async Task AddAsync(Guid userId, CreateNoteDto createNoteDto)
     {
-        simpleNotesDbContext.Notes.Add(note);
+        simpleNotesDbContext.Notes.Add(mapper.Map<Note>((userId, createNoteDto)));
         await simpleNotesDbContext.SaveChangesAsync();
     }
 
-    public async Task<bool> EditAsync(Note newNote)
+    public async Task<bool> EditAsync(Guid userId, Guid noteId, EditNoteDto editNoteDto)
     {
-        var note = await simpleNotesDbContext.Notes.FirstOrDefaultAsync(note =>
-            note.UserId == newNote.UserId && note.Id == newNote.Id);
+        var note = await simpleNotesDbContext
+            .Notes
+            .FirstOrDefaultAsync(note => note.UserId == userId && note.Id == noteId);
         if (note is null)
         {
             logger.LogWarning("Attempt to edit not existing note");
             return false;
         }
 
+        var newNote = mapper.Map<Note>(editNoteDto);
         note.Title = newNote.Title;
         note.Description = newNote.Description;
         note.UpdateDateTime = newNote.UpdateDateTime;
@@ -50,9 +66,12 @@ public class NoteRepository(ILogger<NoteRepository> logger, ISimpleNotesDbContex
         return true;
     }
 
-    public async Task<bool> RemoveAsync(Guid userId, Guid id)
+    public async Task<bool> RemoveAsync(Guid userId, Guid noteId)
     {
-        var note = await simpleNotesDbContext.Notes.FirstOrDefaultAsync(note => note.UserId == userId && note.Id == id);
+        var note = await simpleNotesDbContext
+            .Notes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(note => note.UserId == userId && note.Id == noteId);
         if (note is null)
         {
             logger.LogWarning("Attempt to edit not existing note");
