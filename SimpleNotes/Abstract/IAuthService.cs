@@ -2,7 +2,6 @@
 
 namespace SimpleNotes.Abstract;
 
-// toDo: реализовать аутентификацию, авторизацию, логаут
 public interface IAuthService
 {
     Task<AuthenticationResult> LoginAsync(LoginDto loginDto);

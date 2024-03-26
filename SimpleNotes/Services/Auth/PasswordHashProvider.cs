@@ -1,5 +1,5 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.Extensions.Options;
 using SimpleNotes.Abstract;
 
@@ -8,14 +8,18 @@ namespace SimpleNotes.Services.Auth;
 public class PasswordHashProvider(IOptions<Settings.PasswordHashProvider> settings) : IPasswordHashProvider
 {
     private readonly Settings.PasswordHashProvider _settings = settings.Value;
-    private const int Iterations = 1000;
-    private const int KeySize = 128;
-    private static readonly HashAlgorithmName Algorithm = HashAlgorithmName.MD5;
+    private const int IterationCount = 10000;
+    private const int NumBytesRequested = 256;
 
     public byte[] GetHash(string password)
     {
         var saltBytes = Encoding.UTF8.GetBytes(_settings.Salt);
-        var hashed = Rfc2898DeriveBytes.Pbkdf2(password, saltBytes, Iterations, Algorithm, KeySize);
+        var hashed = KeyDerivation.Pbkdf2(
+            password,
+            saltBytes, 
+            KeyDerivationPrf.HMACSHA256, 
+            IterationCount, 
+            NumBytesRequested);
 
         return hashed;
     }

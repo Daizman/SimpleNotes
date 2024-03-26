@@ -6,7 +6,6 @@ using SimpleNotes.Models.Note;
 
 namespace SimpleNotes.Repositories;
 
-// toDo: добавить проверки на существование юзера
 public class NoteRepository(
     ILogger<NoteRepository> logger, 
     ISimpleNotesDbContext simpleNotesDbContext,
@@ -14,6 +13,8 @@ public class NoteRepository(
 {
     public async Task<DetailedNoteVm?> GetAsync(Guid userId, Guid noteId)
     {
+        await ThrowIfUserNotFound(userId);
+
         var note = await simpleNotesDbContext
             .Notes
             .AsNoTracking()
@@ -29,6 +30,8 @@ public class NoteRepository(
 
     public async Task<IReadOnlyList<ListNoteVm>> GetAllForUserAsync(Guid userId)
     {
+        await ThrowIfUserNotFound(userId);
+
         var userNotes = await simpleNotesDbContext
             .Notes
             .AsNoTracking()
@@ -40,12 +43,16 @@ public class NoteRepository(
 
     public async Task AddAsync(Guid userId, CreateNoteDto createNoteDto)
     {
+        await ThrowIfUserNotFound(userId);
+
         simpleNotesDbContext.Notes.Add(mapper.Map<Note>((userId, createNoteDto)));
         await simpleNotesDbContext.SaveChangesAsync();
     }
 
     public async Task<bool> EditAsync(Guid userId, Guid noteId, EditNoteDto editNoteDto)
     {
+        await ThrowIfUserNotFound(userId);
+
         var note = await simpleNotesDbContext
             .Notes
             .FirstOrDefaultAsync(note => note.UserId == userId && note.Id == noteId);
@@ -69,6 +76,7 @@ public class NoteRepository(
 
     public async Task<bool> RemoveAsync(Guid userId, Guid noteId)
     {
+        await ThrowIfUserNotFound(userId);
         var note = await simpleNotesDbContext
             .Notes
             .AsNoTracking()
@@ -83,5 +91,15 @@ public class NoteRepository(
         await simpleNotesDbContext.SaveChangesAsync();
 
         return true;
+    }
+
+    private async Task ThrowIfUserNotFound(Guid userId)
+    {
+        var userExists = await simpleNotesDbContext.Users.AnyAsync(user => user.Id == userId);
+
+        if (!userExists)
+        {
+            throw new Exception("User not found.");
+        }
     }
 }

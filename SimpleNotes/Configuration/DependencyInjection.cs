@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +11,7 @@ using SimpleNotes.Database;
 using SimpleNotes.Repositories;
 using SimpleNotes.Services.Auth;
 using SimpleNotes.Services.Infrastructure;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace SimpleNotes.Configuration;
 
@@ -18,11 +20,19 @@ public static class DependencyInjection
     public static IServiceCollection AddSimpleNotes(this IServiceCollection services, IConfiguration configuration)
     {
         services
+            .AddOptions()
             .AddInfrastructure()
             .AddDatabase(configuration)
             .AddRepositories()
             .AddAuth(configuration);
         
+        return services;
+    }
+
+    private static IServiceCollection AddOptions(this IServiceCollection services)
+    {
+        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+
         return services;
     }
 
@@ -34,6 +44,7 @@ public static class DependencyInjection
         services.AddAutoMapper(cfg =>
         {
             cfg.AddProfile(new NoteMappingProfile(dateTimeProvider));
+            cfg.AddProfile(new UserMappingProfile(dateTimeProvider));
         });
 
         return services;
@@ -71,14 +82,14 @@ public static class DependencyInjection
         Settings.PasswordHashProvider passwordHash = new();
         configuration.Bind(nameof(Settings.PasswordHashProvider), passwordHash);
         services.AddSingleton(Options.Create(passwordHash));
-        services.AddSingleton<IPasswordHashProvider, PasswordHashProvider>();
+        services.AddTransient<IPasswordHashProvider, PasswordHashProvider>();
         
         Settings.JwtTokenGenerator jwtSettings = new();
         configuration.Bind(nameof(Settings.JwtTokenGenerator), jwtSettings);
         services.AddSingleton(Options.Create(jwtSettings));
-        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddTransient<IJwtTokenGenerator, JwtTokenGenerator>();
         
-        services.AddSingleton<IAuthService, AuthService>();
+        services.AddScoped<IAuthService, AuthService>();
 
         services.AddAuthentication(defaultScheme: JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options => options.TokenValidationParameters = new()
@@ -92,7 +103,13 @@ public static class DependencyInjection
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            var defaultAuthorizationPolicyBuilder =
+                new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme);
+            defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
+            options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
+        });
 
         return services;
     }

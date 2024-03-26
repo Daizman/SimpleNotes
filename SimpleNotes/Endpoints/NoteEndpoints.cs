@@ -8,7 +8,9 @@ public static class NoteEndpoints
 {
     public static void UseNoteEndpoints(this IEndpointRouteBuilder app)
     {
-        var noteApi = app.MapGroup("/note").WithOpenApi();
+        var noteApi = app.MapGroup("/note")
+            .WithOpenApi()
+            .RequireAuthorization();
 
         noteApi.MapGet("/{userId}", async (
             Guid userId,

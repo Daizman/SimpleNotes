@@ -3,20 +3,40 @@ using SimpleNotes.Dtos;
 
 namespace SimpleNotes.Services.Auth;
 
-public class AuthService : IAuthService
+public class AuthService(
+    IUserRepository userRepository, 
+    IPasswordHashProvider passwordHashProvider,
+    IJwtTokenGenerator jwtTokenGenerator) : IAuthService
 {
-    public Task<AuthenticationResult> LoginAsync(LoginDto loginDto)
+    public async Task<AuthenticationResult> LoginAsync(LoginDto loginDto)
     {
-        throw new NotImplementedException();
+        var user = await userRepository.GetUserAsync(loginDto.NickName);
+        if (!passwordHashProvider.Verify(loginDto.Password, user.Password))
+        {
+            throw new Exception("Incorrect password");
+        }
+        
+        var token = jwtTokenGenerator.GenerateToken(user);
+        return new AuthenticationResult(new AuthenticatedUser(user.Id, user.NickName, token));
     }
 
-    public Task<AuthenticationResult> RegisterAsync(RegisterDto registerDto)
+    public async Task<AuthenticationResult> RegisterAsync(RegisterDto registerDto)
     {
-        throw new NotImplementedException();
+        if (await userRepository.IsUserExistsAsync(registerDto.NickName))
+        {
+            throw new Exception("User already exists");
+        }
+
+        await userRepository.AddUserAsync(registerDto);
+        var user = await userRepository.GetUserAsync(registerDto.NickName);
+        var token = jwtTokenGenerator.GenerateToken(user);
+        return new AuthenticationResult(new AuthenticatedUser(user.Id, user.NickName, token));
     }
 
     public Task LogoutAsync(string token)
     {
+        // тут скорее всего нужно создать хранилище токенов и удалять из него токен при логауте, а в аутентификации
+        // проверять, что токен есть в хранилище
         throw new NotImplementedException();
     }
 }

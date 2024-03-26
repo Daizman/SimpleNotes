@@ -12,11 +12,12 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    // toDo: добавить авторизацию в сваггере
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseHttpsRedirection();
 app.UseSimpleNotesEndpoints();
 

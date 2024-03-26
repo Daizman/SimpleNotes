@@ -29,4 +29,15 @@ public class UserRepository(
         await simpleNotesDbContext.Users.AddAsync(user);
         await simpleNotesDbContext.SaveChangesAsync();
     }
+
+    public async Task<User> GetUserAsync(string nickName)
+    {
+        var user = await simpleNotesDbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.NickName == nickName);
+        if (user is null)
+        {
+            throw new Exception("User not found.");
+        }
+
+        return user;
+    }
 }
