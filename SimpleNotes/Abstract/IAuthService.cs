@@ -8,5 +8,5 @@ public interface IAuthService
 
     Task<AuthenticationResult> RegisterAsync(RegisterDto registerDto);
 
-    Task LogoutAsync(string token);
+    void Logout(Guid userId);
 }

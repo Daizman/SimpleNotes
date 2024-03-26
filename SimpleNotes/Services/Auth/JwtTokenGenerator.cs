@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SimpleNotes.Abstract;
@@ -10,7 +11,8 @@ namespace SimpleNotes.Services.Auth;
 
 public class JwtTokenGenerator(
     IDateTimeProvider dtProvider,
-    IOptions<Settings.JwtTokenGenerator> settings) : IJwtTokenGenerator
+    IOptions<Settings.JwtTokenGenerator> settings,
+    IMemoryCache memoryCache) : IJwtTokenGenerator
 {
     private readonly Settings.JwtTokenGenerator _settings = settings.Value;
     
@@ -27,15 +29,20 @@ public class JwtTokenGenerator(
             new Claim(JwtRegisteredClaimNames.FamilyName, user.NickName),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
+        var expiration = dtProvider.UtcNow.AddMinutes(_settings.ExpiryMinutes);
 
         JwtSecurityToken securityToken = new(
             issuer: _settings.Issuer,
             audience: _settings.Audience,
-            expires: dtProvider.UtcNow.AddMinutes(_settings.ExpiryMinutes),
+            expires: expiration,
             claims: claims,
             signingCredentials: signingCredentials
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(securityToken);
+        var token = new JwtSecurityTokenHandler().WriteToken(securityToken);
+
+        memoryCache.Set(user.Id, token, expiration);
+
+        return token;
     }
 }

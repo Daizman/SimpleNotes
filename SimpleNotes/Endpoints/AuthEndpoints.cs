@@ -4,7 +4,6 @@ using SimpleNotes.Dtos;
 
 namespace SimpleNotes.Endpoints;
 
-// toDo: добавить логаут
 public static class AuthEndpoints
 {
     public static void MapAuthenticationEndpoints(this IEndpointRouteBuilder app)
@@ -31,9 +30,14 @@ public static class AuthEndpoints
         })
             .Produces<AuthenticationResult>();
 
-        authenticationApi.MapDelete("/logout", () =>
+        authenticationApi.MapDelete("/logout/{userId}", (
+            Guid userId,
+            IAuthService authService) =>
         {
-
-        });
+            authService.Logout(userId);
+            
+            return Results.NoContent();
+        })
+            .Produces(StatusCodes.Status204NoContent);
     }
 }

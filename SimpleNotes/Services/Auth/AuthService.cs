@@ -1,4 +1,5 @@
-﻿using SimpleNotes.Abstract;
+﻿using Microsoft.Extensions.Caching.Memory;
+using SimpleNotes.Abstract;
 using SimpleNotes.Dtos;
 
 namespace SimpleNotes.Services.Auth;
@@ -6,7 +7,8 @@ namespace SimpleNotes.Services.Auth;
 public class AuthService(
     IUserRepository userRepository, 
     IPasswordHashProvider passwordHashProvider,
-    IJwtTokenGenerator jwtTokenGenerator) : IAuthService
+    IJwtTokenGenerator jwtTokenGenerator,
+    IMemoryCache memoryCache) : IAuthService
 {
     public async Task<AuthenticationResult> LoginAsync(LoginDto loginDto)
     {
@@ -33,10 +35,8 @@ public class AuthService(
         return new AuthenticationResult(new AuthenticatedUser(user.Id, user.NickName, token));
     }
 
-    public Task LogoutAsync(string token)
+    public void Logout(Guid userId)
     {
-        // тут скорее всего нужно создать хранилище токенов и удалять из него токен при логауте, а в аутентификации
-        // проверять, что токен есть в хранилище
-        throw new NotImplementedException();
+        memoryCache.Remove(userId);
     }
 }
