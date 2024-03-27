@@ -7,7 +7,7 @@ namespace SimpleNotes.Endpoints;
 
 public static class NoteEndpoints
 {
-    public static void UseNoteEndpoints(this IEndpointRouteBuilder app)
+    public static void MapNoteEndpoints(this IEndpointRouteBuilder app)
     {
         var noteApi = app.MapGroup("/note")
             .WithOpenApi()
@@ -29,8 +29,6 @@ public static class NoteEndpoints
             INoteRepository noteRepo) =>
         {
             var note = await noteRepo.GetAsync(userId, noteId);
-            if (note is null)
-                return Results.NotFound();
             return Results.Ok(note);
         })
             .Produces<DetailedNoteVm>()
@@ -44,6 +42,7 @@ public static class NoteEndpoints
             await noteRepo.AddAsync(userId, createNote);
             return Results.Created();
         })
+            .AddEndpointFilter<CreateNoteDtoValidationFilter>()
             .Produces(StatusCodes.Status201Created);
 
         noteApi.MapPut("/{userId}/{noteId}", async (
@@ -52,12 +51,10 @@ public static class NoteEndpoints
                 EditNoteDto editNote,
                 INoteRepository noteRepo) =>
             {
-                var result = await noteRepo.EditAsync(userId, noteId, editNote);
-                return result
-                    ? Results.Ok()
-                    : Results.NotFound();
+                await noteRepo.EditAsync(userId, noteId, editNote);
+                return Results.NoContent();
             })
-                .Produces(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound);
 
         noteApi.MapDelete("/{userId}/{noteId}", async (
@@ -65,11 +62,10 @@ public static class NoteEndpoints
             Guid noteId,
             INoteRepository noteRepo) =>
         {
-            return await noteRepo.RemoveAsync(userId, noteId)
-                ? Results.Ok()
-                : Results.NotFound();
+            await noteRepo.RemoveAsync(userId, noteId);
+            return Results.NoContent();
         })
-            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
     }
 }

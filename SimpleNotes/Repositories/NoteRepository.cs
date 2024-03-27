@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SimpleNotes.Abstract;
 using SimpleNotes.Dtos;
+using SimpleNotes.Errors;
 using SimpleNotes.Models.Note;
 
 namespace SimpleNotes.Repositories;
@@ -11,19 +12,11 @@ public class NoteRepository(
     ISimpleNotesDbContext simpleNotesDbContext,
     IMapper mapper) : INoteRepository
 {
-    public async Task<DetailedNoteVm?> GetAsync(Guid userId, Guid noteId)
+    public async Task<DetailedNoteVm> GetAsync(Guid userId, Guid noteId)
     {
         await ThrowIfUserNotFound(userId);
 
-        var note = await simpleNotesDbContext
-            .Notes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(note => note.UserId == userId && note.Id == noteId);
-        if (note is null)
-        {
-            logger.LogWarning("Attempt to get not existing note");
-            return null;
-        }
+        var note = await GetNoteAndThrowIfNotFound(userId, noteId);
 
         return mapper.Map<DetailedNoteVm>(note);
     }
@@ -49,7 +42,7 @@ public class NoteRepository(
         await simpleNotesDbContext.SaveChangesAsync();
     }
 
-    public async Task<bool> EditAsync(Guid userId, Guid noteId, EditNoteDto editNoteDto)
+    public async Task EditAsync(Guid userId, Guid noteId, EditNoteDto editNoteDto)
     {
         await ThrowIfUserNotFound(userId);
 
@@ -58,8 +51,8 @@ public class NoteRepository(
             .FirstOrDefaultAsync(note => note.UserId == userId && note.Id == noteId);
         if (note is null)
         {
-            logger.LogWarning("Attempt to edit not existing note");
-            return false;
+            logger.LogError("Attempt to edit not existing note");
+            throw new NoteNotFoundException();
         }
 
         var newNote = mapper.Map<Note>(editNoteDto);
@@ -70,27 +63,15 @@ public class NoteRepository(
         note.Priority = newNote.Priority;
         
         await simpleNotesDbContext.SaveChangesAsync();
-
-        return true;
     }
 
-    public async Task<bool> RemoveAsync(Guid userId, Guid noteId)
+    public async Task RemoveAsync(Guid userId, Guid noteId)
     {
         await ThrowIfUserNotFound(userId);
-        var note = await simpleNotesDbContext
-            .Notes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(note => note.UserId == userId && note.Id == noteId);
-        if (note is null)
-        {
-            logger.LogWarning("Attempt to edit not existing note");
-            return false;
-        }
+        var note = await GetNoteAndThrowIfNotFound(userId, noteId);
 
         simpleNotesDbContext.Notes.Remove(note);
         await simpleNotesDbContext.SaveChangesAsync();
-
-        return true;
     }
 
     private async Task ThrowIfUserNotFound(Guid userId)
@@ -99,7 +80,22 @@ public class NoteRepository(
 
         if (!userExists)
         {
-            throw new Exception("User not found.");
+            throw new UserNotFoundException();
         }
+    }
+    
+    private async Task<Note> GetNoteAndThrowIfNotFound(Guid userId, Guid noteId)
+    {
+        var note = await simpleNotesDbContext
+            .Notes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(note => note.UserId == userId && note.Id == noteId);
+
+        if (note is null)
+        {
+            throw new NoteNotFoundException();
+        }
+
+        return note;
     }
 }

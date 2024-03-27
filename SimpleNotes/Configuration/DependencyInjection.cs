@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using SimpleNotes.Abstract;
 using SimpleNotes.Configuration.Mappings;
 using SimpleNotes.Configuration.Policies;
 using SimpleNotes.Database;
+using SimpleNotes.Errors;
 using SimpleNotes.Repositories;
 using SimpleNotes.Services.Auth;
 using SimpleNotes.Services.Infrastructure;
@@ -23,12 +25,20 @@ public static class DependencyInjection
     public static IServiceCollection AddSimpleNotes(this IServiceCollection services, IConfiguration configuration)
     {
         services
+            .AddErrorHandle()
             .AddOptions()
             .AddInfrastructure()
             .AddDatabase(configuration)
             .AddRepositories()
             .AddAuth(configuration);
         
+        return services;
+    }
+
+    private static IServiceCollection AddErrorHandle(this IServiceCollection services)
+    {
+        services.AddProblemDetails();
+
         return services;
     }
 
@@ -50,6 +60,8 @@ public static class DependencyInjection
             cfg.AddProfile(new UserMappingProfile(dateTimeProvider));
         });
 
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
         return services;
     }
 
@@ -60,7 +72,7 @@ public static class DependencyInjection
             var connection = configuration.GetRequiredSection(nameof(Settings.PostgreSqlConnection)).Get<Settings.PostgreSqlConnection>();
             if (connection is null)
             {
-                throw new Exception("PostgreSQL connection not found in appsettings.json.");
+                throw new PostgreSqlConnectionStringException();
             }
             options.UseNpgsql(connection.ConnectionString, npgsqlOptionsBuilder =>
             {

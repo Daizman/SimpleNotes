@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using SimpleNotes.Abstract;
 using SimpleNotes.Dtos;
+using SimpleNotes.Errors;
 
 namespace SimpleNotes.Services.Auth;
 
@@ -15,7 +16,7 @@ public class AuthService(
         var user = await userRepository.GetUserAsync(loginDto.NickName);
         if (!passwordHashProvider.Verify(loginDto.Password, user.Password))
         {
-            throw new Exception("Incorrect password");
+            throw new InvalidArgumentsException();
         }
         
         var token = jwtTokenGenerator.GenerateToken(user);
@@ -26,7 +27,7 @@ public class AuthService(
     {
         if (await userRepository.IsUserExistsAsync(registerDto.NickName))
         {
-            throw new Exception("User already exists");
+            throw new UserAlreadyExistsException();
         }
 
         await userRepository.AddUserAsync(registerDto);

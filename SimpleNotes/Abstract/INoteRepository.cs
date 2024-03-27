@@ -4,9 +4,9 @@ namespace SimpleNotes.Abstract;
 
 public interface INoteRepository
 {
-    Task<DetailedNoteVm?> GetAsync(Guid userId, Guid noteId);
+    Task<DetailedNoteVm> GetAsync(Guid userId, Guid noteId);
     Task<IReadOnlyList<ListNoteVm>> GetAllForUserAsync(Guid userId);
     Task AddAsync(Guid userId, CreateNoteDto createNoteDto);
-    Task<bool> EditAsync(Guid userId, Guid noteId, EditNoteDto editNoteDto);
-    Task<bool> RemoveAsync(Guid userId, Guid noteId);
+    Task EditAsync(Guid userId, Guid noteId, EditNoteDto editNoteDto);
+    Task RemoveAsync(Guid userId, Guid noteId);
 }

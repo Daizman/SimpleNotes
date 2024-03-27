@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SimpleNotes.Abstract;
 using SimpleNotes.Dtos;
+using SimpleNotes.Errors;
 using SimpleNotes.Models.User;
 
 namespace SimpleNotes.Repositories;
@@ -35,7 +36,7 @@ public class UserRepository(
         var user = await simpleNotesDbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.NickName == nickName);
         if (user is null)
         {
-            throw new Exception("User not found.");
+            throw new UserNotFoundException();
         }
 
         return user;

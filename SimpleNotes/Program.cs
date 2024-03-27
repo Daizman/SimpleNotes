@@ -11,14 +11,14 @@ builder.Services.AddSimpleNotes(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseExceptionHandler("/error");
+app.UseAuthentication();
+app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseAuthentication();
-app.UseAuthorization();
 app.UseHttpsRedirection();
 app.UseSimpleNotesEndpoints();
 

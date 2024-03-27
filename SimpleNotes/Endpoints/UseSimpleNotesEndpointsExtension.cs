@@ -4,7 +4,8 @@ public static class UseSimpleNotesEndpointsExtension
 {
     public static WebApplication UseSimpleNotesEndpoints(this WebApplication app)
     {
-        app.UseNoteEndpoints();
+        app.MapErrorEndpoints();
+        app.MapNoteEndpoints();
         app.MapAuthenticationEndpoints();
 
         return app;
