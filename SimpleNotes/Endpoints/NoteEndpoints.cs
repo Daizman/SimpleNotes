@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using SimpleNotes.Abstract;
 using SimpleNotes.Dtos;
+using SimpleNotes.Filters;
 
 namespace SimpleNotes.Endpoints;
 
@@ -10,7 +11,8 @@ public static class NoteEndpoints
     {
         var noteApi = app.MapGroup("/note")
             .WithOpenApi()
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<AuthorizationFilter>();
 
         noteApi.MapGet("/{userId}", async (
             Guid userId,

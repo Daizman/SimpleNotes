@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SimpleNotes.Abstract;
 using SimpleNotes.Configuration.Mappings;
+using SimpleNotes.Configuration.Policies;
 using SimpleNotes.Database;
 using SimpleNotes.Repositories;
 using SimpleNotes.Services.Auth;
@@ -124,6 +125,8 @@ public static class DependencyInjection
                     }
                 };
             });
+        
+        services.AddSingleton<IAuthorizationHandler, NotesOwnerRequirementHandler>();
 
         services.AddAuthorization(options =>
         {
@@ -131,6 +134,12 @@ public static class DependencyInjection
                 new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme);
             defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
             options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
+            
+            options.AddPolicy("NotesOwner", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new NotesOwnerRequirement());
+            });
         });
 
         return services;
