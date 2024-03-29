@@ -1,9 +1,11 @@
 ﻿using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
@@ -46,6 +48,8 @@ public static class DependencyInjection
     private static IServiceCollection AddOptions(this IServiceCollection services)
     {
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+        services.Configure<JsonOptions>(options =>
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         return services;
     }

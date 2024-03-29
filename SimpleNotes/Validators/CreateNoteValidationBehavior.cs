@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using SimpleNotes.Dtos;
+using SimpleNotes.ApiTypes;
 using SimpleNotes.Models.Note;
 
 namespace SimpleNotes.Validators;

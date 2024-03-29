@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using SimpleNotes.Abstract;
-using SimpleNotes.Dtos;
+using SimpleNotes.ApiTypes;
 using SimpleNotes.Errors;
 using SimpleNotes.Models.Note;
 
@@ -21,15 +21,34 @@ public class NoteRepository(
         return mapper.Map<DetailedNoteVm>(note);
     }
 
-    public async Task<IReadOnlyList<ListNoteVm>> GetAllForUserAsync(Guid userId)
+    public async Task<IReadOnlyList<ListNoteVm>> GetAllForUserAsync(Guid userId, OrderColumn? orderColumn = null, bool isDesc = false)
     {
         await ThrowIfUserNotFound(userId);
 
-        var userNotes = await simpleNotesDbContext
+        var userNotesQuery = simpleNotesDbContext
             .Notes
             .AsNoTracking()
-            .Where(note => note.UserId == userId)
-            .ToListAsync();
+            .Where(note => note.UserId == userId);
+        
+        if (orderColumn is not null)
+        {
+            userNotesQuery = orderColumn switch
+            {
+                OrderColumn.Title => isDesc 
+                    ? userNotesQuery.OrderByDescending(note => note.Title) 
+                    : userNotesQuery.OrderBy(note => note.Title),
+                OrderColumn.Priority => isDesc 
+                    ? userNotesQuery.OrderByDescending(note => note.Priority)
+                    : userNotesQuery.OrderBy(note => note.Priority),
+                OrderColumn.CreationDateTime => isDesc
+                    ? userNotesQuery.OrderByDescending(note => note.CreationDateTime)
+                    : userNotesQuery.OrderBy(note => note.CreationDateTime),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+        
+        var userNotes = await userNotesQuery.ToListAsync();
+
         var mapped = mapper.Map<List<ListNoteVm>>(userNotes);
         return mapped.AsReadOnly();
     }

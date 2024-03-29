@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using SimpleNotes.Abstract;
-using SimpleNotes.Dtos;
+using SimpleNotes.ApiTypes;
 using SimpleNotes.Filters;
 
 namespace SimpleNotes.Endpoints;
@@ -19,9 +19,11 @@ public static class NoteEndpoints
         noteApi.MapGet("/{userId}", async (
             Guid userId,
             INoteRepository noteRepo,
-            IMapper mapper) =>
+            IMapper mapper,
+            OrderColumn? orderColumn = null,
+            bool isDesc = false) =>
         {
-            return Results.Ok(mapper.Map<List<ListNoteVm>>(await noteRepo.GetAllForUserAsync(userId)));
+            return Results.Ok(mapper.Map<List<ListNoteVm>>(await noteRepo.GetAllForUserAsync(userId, orderColumn, isDesc)));
         })
             .Produces<List<ListNoteVm>>();
 

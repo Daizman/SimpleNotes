@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using SimpleNotes.Abstract;
-using SimpleNotes.Dtos;
 using SimpleNotes.Models.Note;
+using DetailedNoteVm = SimpleNotes.ApiTypes.DetailedNoteVm;
+using ListNoteVm = SimpleNotes.ApiTypes.ListNoteVm;
 
 namespace SimpleNotes.Configuration.Mappings;
 
@@ -21,7 +22,7 @@ public class NoteMappingProfile : Profile
             .ForCtorParam(nameof(ListNoteVm.IsCompleted), opt => opt.MapFrom(note => note.IsCompleted))
             .ForCtorParam(nameof(ListNoteVm.Priority), opt => opt.MapFrom(note => note.Priority.ToString()));
         
-        CreateMap<(Guid UserId, CreateNoteDto CreateNoteDto), Note>()
+        CreateMap<(Guid UserId, ApiTypes.CreateNoteDto CreateNoteDto), Note>()
             .ConvertUsing(src => new Note
             {
                 Id = Guid.NewGuid(),
@@ -33,7 +34,7 @@ public class NoteMappingProfile : Profile
                 Priority = StringToPriorityConvertor(src.CreateNoteDto.Priority),
                 UserId = src.UserId,
             });
-        CreateMap<(Guid UserId, Guid NoteId, EditNoteDto EditNoteDto), Note>()
+        CreateMap<(Guid UserId, Guid NoteId, ApiTypes.EditNoteDto EditNoteDto), Note>()
             .ConvertUsing(src => new Note
             {
                 Id = src.NoteId,
