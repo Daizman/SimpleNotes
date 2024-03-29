@@ -1,6 +1,7 @@
 using SimpleNotes.Configuration;
 using SimpleNotes.Database;
 using SimpleNotes.Endpoints;
+using SimpleNotes.Services.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +12,7 @@ builder.Services.AddSimpleNotes(builder.Configuration);
 
 var app = builder.Build();
 
-app.UseExceptionHandler("/error");
+app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 if (app.Environment.IsDevelopment())

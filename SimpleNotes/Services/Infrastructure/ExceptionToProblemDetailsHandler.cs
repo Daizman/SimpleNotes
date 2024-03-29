@@ -2,30 +2,22 @@
 using Microsoft.AspNetCore.Diagnostics;
 using SimpleNotes.Errors;
 
-namespace SimpleNotes.Endpoints;
+namespace SimpleNotes.Services.Infrastructure;
 
-public static class ErrorEndpoints
+public class ExceptionToProblemDetailsHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
 {
-    public static void MapErrorEndpoints(this IEndpointRouteBuilder app)
+    public async ValueTask<bool> TryHandleAsync(
+        HttpContext context,
+        Exception exception,
+        CancellationToken cancellationToken)
     {
-        app.Map("/error", async (HttpContext context) =>
-        {
-            var pds = context.RequestServices.GetRequiredService<IProblemDetailsService>();
-            var problemContext = ProblemDetailsContext(context);
-
-            if (!await pds.TryWriteAsync(problemContext))
-            {
-                await context.Response.WriteAsync("Fallback: An error occurred.");
-            }
-
-            // toDo: разобраться с 500
-            return Results.Problem(problemContext.ProblemDetails);
-        });
+        var problemContext = ProblemDetailsContext(context, exception);
+        context.Response.StatusCode = (int)problemContext.ProblemDetails.Status!;
+        return await problemDetailsService.TryWriteAsync(problemContext);
     }
 
-    private static ProblemDetailsContext ProblemDetailsContext(HttpContext context)
+    private static ProblemDetailsContext ProblemDetailsContext(HttpContext context, Exception exception)
     {
-        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
         var (statusCode, msg) = exception switch
         {
             IServiceException serviceException => ((int)serviceException.StatusCode, serviceException.ErrorMessage),

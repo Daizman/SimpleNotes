@@ -38,6 +38,7 @@ public static class DependencyInjection
     private static IServiceCollection AddErrorHandle(this IServiceCollection services)
     {
         services.AddProblemDetails();
+        services.AddExceptionHandler<ExceptionToProblemDetailsHandler>();
 
         return services;
     }
