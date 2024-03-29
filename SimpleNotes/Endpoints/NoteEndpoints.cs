@@ -9,8 +9,10 @@ public static class NoteEndpoints
 {
     public static void MapNoteEndpoints(this IEndpointRouteBuilder app)
     {
-        var noteApi = app.MapGroup("/note")
+        var noteApi = app
+            .MapGroup("/note")
             .WithOpenApi()
+            .WithTags("Notes")
             .RequireAuthorization()
             .AddEndpointFilter<AuthorizationFilter>();
 

@@ -68,19 +68,24 @@ public static class DependencyInjection
 
     private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
+        var connection = configuration
+                             .GetRequiredSection(nameof(Settings.PostgreSqlConnection))
+                             .Get<Settings.PostgreSqlConnection>()
+            ?? throw new PostgreSqlConnectionStringException();
         services.AddDbContext<SimpleNotesDbContext>(options =>
         {
-            var connection = configuration.GetRequiredSection(nameof(Settings.PostgreSqlConnection)).Get<Settings.PostgreSqlConnection>();
-            if (connection is null)
-            {
-                throw new PostgreSqlConnectionStringException();
-            }
             options.UseNpgsql(connection.ConnectionString, npgsqlOptionsBuilder =>
             {
                 npgsqlOptionsBuilder.MigrationsAssembly(Assembly.GetExecutingAssembly().FullName);
             });
         });
         services.AddScoped<ISimpleNotesDbContext>(provider => provider.GetRequiredService<SimpleNotesDbContext>());
+        services.AddHealthChecks()
+            .AddNpgSql(
+                connection.ConnectionString,
+                name: "postgresql",
+                timeout: TimeSpan.FromSeconds(3),
+                tags: new[] { "ready" });
         
         return services;
     }

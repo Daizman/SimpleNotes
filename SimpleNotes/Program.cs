@@ -1,7 +1,6 @@
 using SimpleNotes.Configuration;
 using SimpleNotes.Database;
 using SimpleNotes.Endpoints;
-using SimpleNotes.Services.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -8,7 +8,10 @@ public static class AuthEndpoints
 {
     public static void MapAuthenticationEndpoints(this IEndpointRouteBuilder app)
     {
-        var authenticationApi = app.MapGroup("/auth");
+        var authenticationApi = app
+            .MapGroup("/auth")
+            .WithTags("Auth")
+            .WithOpenApi();
 
         authenticationApi.MapPost("/register", async (
                 [FromBody] RegisterDto registerDto, 
