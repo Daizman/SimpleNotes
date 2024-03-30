@@ -138,7 +138,7 @@ public static class DependencyInjection
                         if (userId is null 
                             || !Guid.TryParse(userId, out var guid) 
                             || !cache.TryGetValue(guid, out var token)
-                            || token.ToString() != context.SecurityToken.UnsafeToString())
+                            || token?.ToString() != context.SecurityToken.UnsafeToString())
                         {
                             context.Fail("Unauthorized");
                         }

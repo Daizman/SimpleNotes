@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using SimpleNotes.Abstract;
-using SimpleNotes.Dtos;
+using SimpleNotes.ApiTypes;
 using SimpleNotes.Errors;
 
 namespace SimpleNotes.Services.Auth;

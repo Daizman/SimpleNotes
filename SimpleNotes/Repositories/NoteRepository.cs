@@ -29,7 +29,7 @@ public class NoteRepository(
             .Notes
             .AsNoTracking()
             .Where(note => note.UserId == userId);
-        
+
         if (orderColumn is not null)
         {
             userNotesQuery = orderColumn switch
@@ -46,7 +46,7 @@ public class NoteRepository(
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
-        
+
         var userNotes = await userNotesQuery.ToListAsync();
 
         var mapped = mapper.Map<List<ListNoteVm>>(userNotes);

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SimpleNotes.Abstract;
-using SimpleNotes.Dtos;
+using SimpleNotes.ApiTypes;
 
 namespace SimpleNotes.Endpoints;
 

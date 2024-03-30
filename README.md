@@ -1,12 +1,13 @@
 ﻿# Заметки
 
-Это простеньки проект с заметками, чтобы можно было подглядывать, когда будешь делать ДЗ.
+Это простенький проект с заметками, чтобы можно было подглядывать, когда будешь делать ДЗ.
 
 ## БД
 
 ### Секреты
 
 Для работы с БД используется строка подключения, которая задается через `appsettings.json`.
+
 Так как хранить пароль в `appsettings.json`, который мы выкладываем на гит - не самая лучшая идея,
 мы будем использовать [secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-8.0&tabs=windows).
 
@@ -20,10 +21,20 @@
 
 *Если нужен проект, проставляем его через флаг `--project`*.
 
+**Ожидаемые секреты**
+
+- `PostgreSqlConnection:Password` = `value`
+- `PasswordHashProvider:Salt` = `stringWithLen32symbol`
+- `JwtTokenGenerator:Secret` = `stringWithLen32symbol`
+- `JwtTokenGenerator:Issuer` = `currproj`
+- `JwtTokenGenerator:Audience` = `currproj`
+
+
 ### Миграции
 
 Чтобы можно было не терять данные при изменении моделей в ходе жизни проекта используются миграции.
 Подробнее про них можно почитать [тут](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli).
+
 Для того, чтобы добавить миграциию используем `dotnet ef migrations add migName`. Так же используем `--project`, если нужно.
 Затем миграцию можно накатить `dotnet ef database update`, но если БД уже создана, а мы накатываем миграцию, которая ее
 создает, то мы получим ошибку.
@@ -31,4 +42,5 @@
 ## JWT токены
 
 Нужны, чтобы пользователь не хранил на своей стороне пароль, а мог авторизоваться через токен.
+
 Хоть в `appsettings.json` поля `Audience` и `Issuer` и не используются, но они должны быть заполнены (через секреты).

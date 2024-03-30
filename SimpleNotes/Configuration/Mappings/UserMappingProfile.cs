@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using SimpleNotes.Abstract;
-using SimpleNotes.Dtos;
+using SimpleNotes.ApiTypes;
 using SimpleNotes.Models.User;
 
 namespace SimpleNotes.Configuration.Mappings;

@@ -1,4 +1,4 @@
-﻿namespace SimpleNotes.Dtos;
+﻿namespace SimpleNotes.ApiTypes;
 
 public record RegisterDto(string NickName, string Email, string Password);
 

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using SimpleNotes.Abstract;
 using SimpleNotes.ApiTypes;
 using SimpleNotes.Filters;
@@ -20,11 +21,12 @@ public static class NoteEndpoints
             Guid userId,
             INoteRepository noteRepo,
             IMapper mapper,
-            OrderColumn? orderColumn = null,
+            [FromQuery]OrderColumn? orderColumn = null,
             bool isDesc = false) =>
-        {
-            return Results.Ok(mapper.Map<List<ListNoteVm>>(await noteRepo.GetAllForUserAsync(userId, orderColumn, isDesc)));
-        })
+            {
+                var notes = await noteRepo.GetAllForUserAsync(userId, orderColumn, isDesc);
+                return Results.Ok(mapper.Map<List<ListNoteVm>>(notes));
+            })
             .Produces<List<ListNoteVm>>();
 
         noteApi.MapGet("/{userId}/{noteId}", async (

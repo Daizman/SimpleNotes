@@ -1,4 +1,4 @@
-﻿using SimpleNotes.Dtos;
+﻿using SimpleNotes.ApiTypes;
 
 namespace SimpleNotes.Abstract;
 
